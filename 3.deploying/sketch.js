@@ -14,14 +14,23 @@ let video;
 let poseNet;
 let pose;
 let skeleton;
+let width
+let height
 
 let brain;
 let poseLabel = "Y";
 
+const widthMultiplier = 0.8
+const aspectRatioInverse = 480 / 640
+
 function setup() {
-  createCanvas(640, 480);
   video = createCapture(VIDEO);
   video.hide();
+  console.log(video.width, video.height);
+  width = windowWidth*widthMultiplier
+  height = aspectRatioInverse * width
+  myCanvas = createCanvas(width, height);
+  myCanvas.parent("screen");
   poseNet = ml5.poseNet(video, modelLoaded);
   poseNet.on('pose', gotPoses);
 
@@ -83,10 +92,12 @@ function modelLoaded() {
 }
 
 function draw() {
+  const xScaleFactor = width / video.width
+  const yScaleFactor = height / video.height
   push();
-  translate(video.width, 0);
+  translate(width, 0);
   scale(-1, 1);
-  image(video, 0, 0, video.width, video.height);
+  image(video, 0, 0, width, height);
 
   if (pose) {
     for (let i = 0; i < skeleton.length; i++) {
@@ -95,11 +106,11 @@ function draw() {
       strokeWeight(2);
       stroke(0);
 
-      line(a.position.x, a.position.y, b.position.x, b.position.y);
+      line(a.position.x*xScaleFactor, a.position.y*yScaleFactor, b.position.x*xScaleFactor, b.position.y*yScaleFactor);
     }
     for (let i = 0; i < pose.keypoints.length; i++) {
-      let x = pose.keypoints[i].position.x;
-      let y = pose.keypoints[i].position.y;
+      let x = pose.keypoints[i].position.x*xScaleFactor;
+      let y = pose.keypoints[i].position.y*yScaleFactor;
       fill(0);
       stroke(255);
       ellipse(x, y, 16, 16);
